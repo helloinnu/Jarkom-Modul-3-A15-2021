@@ -428,31 +428,85 @@ Testing
 
 ## Nomor 7
 
-Untuk memperlancar komunikasi Luffy dan rekannya, dibuatkan subdomain melalui `water7` dengan nama `general.mecha.franky.yyy.com` dengan alias `www.general.mecha.franky.yyy.com` yang mengarah ke `skypie`.
+Luffy dan Zoro berencana menjadikan `Skypie` sebagai server untuk jual beli kapal yang dimilikinya dengan alamat IP yang tetap dengan IP `[prefix IP].3.69`
 
 ### Penjelasan nomor 7
 
-Menambahkan config pada DNS record `mecha.franky.a15.com` dengan IP mengarah ke `Skypie`
+Mengatur hardware address static untuk `skypie` dengan menambahkan config pada `/etc/network/interfaces`
+
+```
+hwaddress ether 26:e0:8d:1f:9e:69
+```
+
+Menambahkan config pada DHCP server `jipangu` di file `/etc/dhcp/dhcpd.conf` dengan hardware address yang dimiliki `skypie` dengan fixed ip `192.176.3.69`
+
+```
+host skypie {
+    hardware ethernet 26:e0:8d:1f:9e:69;
+    fixed-address 192.176.3.69;
+}
+```
+
+Restart isc-dhcp-server
+
+```
+service isc-dhcp-server restart
+```
+
+Testing
+
+- Restart node `skypie` kemudian cek ip dengan command `ip a`
+
+  ![7.1](img/7.1.png)
+
+## Nomor 8
+
+`Loguetown` digunakan sebagai client Proxy agar transaksi jual beli dapat terjamin keamanannya, juga untuk mencegah kebocoran data transaksi.
+
+Pada `Loguetown`, proxy harus bisa diakses dengan nama `jualbelikapal.yyy.com` dengan port yang digunakan adalah `5000`.
+
+### Penjelasan nomor 8
+
+Menjadikan node `enieslobby` sebagai DNS server untuk `jualbelikapal.a15.com` yang ip nya mengarah ke `water7`
+
+Install aplikasi bind9
+
+```
+apt-get update
+apt-get install bind9 -y
+```
+
+Menambahkan zone untuk domain `jualbelikapal.a15.com` pada file `/etc/bind/named.conf.local`
+
+```
+zone "jualbelikapal.a15.com" {
+        type master;
+        file "/etc/bind/jarkom/jualbelikapal.a15.com";
+};
+```
+
+Membuat folder jarkom di dalam `\etc\bind`
+
+```
+mkdir /etc/bind/jarkom
+```
+
+Menambahkan DNS record `jualbelikapal.a15.com` pada folder `/etc/bind/jarkom` dengan nama `jualbelikapal.a15.com`, konfigurasi sebagai berikut
 
 ```
 ;
 ; BIND data file for local loopback interface
 ;
-$TTL	604800
-@	IN	SOA	mecha.franky.a15.com. root.mecha.franky.a15.com. (
-			      2		; Serial
-			 604800		; Refresh
-			  86400		; Retry
-			2419200		; Expire
-			 604800 )	; Negative Cache TTL
+$TTL    604800
+@       IN      SOA     jualbelikapal.a15.com. root.jualbelikapal.a15.com. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
 ;
-@		IN	NS	mecha.franky.a15.com.
-@		IN	A	192.176.2.4 ;
-www		IN	CNAME	mecha.franky.a15.com.;
-
-general		    IN  A       192.176.2.4 ; IP Skypie
-www.general     IN	CNAME 	general;
-
+@       IN      NS      jualbelikapal.a15.com.
+@       IN      A       192.176.2.3; IP water7
 ```
 
 Restart bind9
@@ -461,134 +515,179 @@ Restart bind9
 service bind9 restart
 ```
 
+Menjadikan `water7` sebagai proxy server
+
+Install squid
+
+```
+apt-get update
+apt-get install squid -y
+```
+
+Backup configurasi default
+
+```
+mv /etc/squid/squid.conf /etc/squid/squid.conf.bak
+```
+
+Menambahkan configurasi proxy `jualbelikapal.a15.com` port `5000` yang disimpan pada `/etc/squid/squid.conf`
+
+```
+http_port 5000
+visible_hostname Water7
+
+dns_nameservers 192.176.2.2 192.168.122.1
+```
+
+Restart squid.
+
+```
+service squid restart
+```
+
 Testing
 
-- Ping dari `loguetown` ke `general.mecha.franky.a15.com` dan `www.general.mecha.franky.a15.com`
+- pada `loguetown` install lynx dan aktifkan proxy untuk `jualbelikapal.a15.com`
 
-  ![7.1](img/7.1.png)
+  ```
+  apt update
+  apt install lynx -y
 
-## Nomor 8
+  export http_proxy="http://jualbelikapal.a15.com:5000"
+  ```
 
-Setelah melakukan konfigurasi server, maka dilakukan konfigurasi Webserver. Pertama dengan webserver `www.franky.yyy.com`. Pertama, luffy membutuhkan webserver dengan DocumentRoot pada `/var/www/franky.yyy.com`.
+- Buka `google.com` dengan lynx
+  ![8.1](img/8.1.png)
 
-### Penjelasan nomor 8
+  _Secara default proxy akan menolak semua access dengan protokol HTTP termasuk `google.com`_
 
-Install aplikasi apache, PHP, dan libapache2-mod-php7.0. pada `skypie`
+## Nomor 9
+
+Agar transaksi jual beli lebih aman dan pengguna website ada dua orang, proxy dipasang autentikasi user proxy dengan enkripsi MD5 dengan dua username, yaitu dengan password luffy_yyy dan zorobelikapalyyy dengan password zoro_yyy.
+
+### Penjelasan nomor 9
+
+Menambahkan configurasi proxy `jualbelikapal.a15.com` yang disimpan pada `/etc/squid/squid.conf`
+
+```
+auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/passwd
+auth_param basic children 5
+auth_param basic realm Proxy
+auth_param basic credentialsttl 2 hours
+auth_param basic casesensitive on
+acl USERS proxy_auth REQUIRED
+http_access allow USERS
+```
+
+Membuat user login untuk luffy dan zoro
+
+Install apache2-utils
+
+```
+apt update
+apt install apache2-utils -y
+```
+
+Menambahkan user dan password
+
+```
+htpasswd -c -b -m /etc/squid/passwd zorobelikapala15 zoro_a15
+htpasswd -b -m /etc/squid/passwd luffybelikapala15 luffy_a15
+```
+
+Restart squid.
+
+```
+service squid restart
+```
+
+Testing
+
+- Dari `loguetown` buka `google.com` menggunakan lynx.
+
+  ![9.1](img/9.1.png)
+  ![9.2](img/9.2.png)
+  ![9.3](img/9.3.png)
+
+## Nomor 10
+
+Transaksi jual beli tidak dilakukan setiap hari, oleh karena itu akses internet dibatasi hanya dapat diakses setiap hari `Senin-Kamis pukul 07.00-11.00` dan setiap hari `Selasa-Jum’at pukul 17.00-03.00` keesokan harinya (sampai `Sabtu pukul 03.00`).
+
+### Penjelasan nomor 10
+
+Menambahkan configurasi proxy `jualbelikapal.a15.com` yang disimpan pada `/etc/squid/squid.conf`
+
+```
+include /etc/squid/acl.conf
+
+http_access allow USERS AVAILABLE_WORKING_1
+http_access allow USERS AVAILABLE_WORKING_2
+http_access allow USERS AVAILABLE_WORKING_3
+http_access deny all
+```
+
+Membuat file baru `acl.conf` pada folder `/etc/squid/`
+
+```
+acl AVAILABLE_WORKING_1 time MTWH 07:00-11:00
+acl AVAILABLE_WORKING_2 time TWHF 17:00-24:00
+acl AVAILABLE_WORKING_3 time WHFA 00:00-03:00
+```
+
+Restart squid.
+
+```
+service squid restart
+```
+
+Testing
+
+- Pada `loguetown` cek hari dan jam nya dengan command `date`.
+
+  ![10.1](img/10.1.png)
+
+- Buka `google.com` dengan lynx, karena hari dan jamnya menunjukan bukan jam kerja maka access akan ditolak
+
+  ![10.2](img/10.2.png)
+
+## Nomor 11
+
+Agar transaksi bisa lebih fokus berjalan, maka dilakukan redirect website agar mudah mengingat website transaksi jual beli kapal. Setiap mengakses `google.com`, akan diredirect menuju `super.franky.yyy.com` dengan website yang sama pada soal shift modul 2. Web server `super.franky.yyy.com` berada pada node `Skypie` .
+
+### Penjelasan nomor 11
+
+Menjadikan node `skypie` menjadi web server untuk `super.franky.a15.com`
+
+Install apache2, php, library php, wget dan unzip
 
 ```
 apt-get update
 apt-get install apache2 -y
 apt-get install php -y
 apt-get install libapache2-mod-php7.0 -y
-```
-
-Menambahkan file configurasi pada folder `/etc/apache2/sites-available` dengan nama `franky.a15.com.conf`
-
-```
-<VirtualHost *:80>
-
-        ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/franky.a15.com
-        ServerName franky.a15.com
-        ServerAlias www.franky.a15.com
-
-        ErrorLog ${APACHE_LOG_DIR}/error.log
-        CustomLog ${APACHE_LOG_DIR}/access.log combined
-
-</VirtualHost>
+apt-get install wget -y
+apt-get install unzip -y
 
 ```
 
-Download file requirement menggunakan `wget`.
+Mendapatkan paket untuk `super.franky.a15.com`
 
 ```
-wget https://github.com/FeinardSlim/Praktikum-Modul-2-Jarkom/raw/main/franky.zip
+wget https://raw.githubusercontent.com/FeinardSlim/Praktikum-Modul-2-Jarkom/main/super.franky.zip
 ```
 
-Membuat folder `franky.a15.com` dalam folder `/var/www/`
+Unzip paket yang sudah didownload dan disimpan pada folder `/var/www/` dengan nama `super.franky.a15.com`
 
 ```
-mkdir /var/www/franky.a15.com
-```
-
-Unzip file requirement dan disimpan dalam folder `/var/www/franky.a15.com`
+unzip super.franky.zip -d /var/www
+mv /var/www/super.franky /var/www/super.franky.a15.com
 
 ```
-unzip -j  franky.zip -d /var/www/franky.a15.com
-```
 
-![8.2](img/8.2.png)
-
-Aktifkan `franky.a15.com` dengan command
+Menambahkan file configurasi virtual host port `5000` pada folder `/etc/apache2/sites-available` dengan nama `super.franky.a15.com.conf`
 
 ```
-cd /etc/apache2/sites-available/
-a2ensite franky.a15.com.conf
-cd
-```
-
-Restart apache
-
-```
-service apache2 restart
-```
-
-Testing
-
-- Pada `loguetown` install lynx
-  ```
-  apt-get install lynx -y
-  ```
-- Buka `www.franky.a15.com` menggunakan lynx.
-
-  ![8.1](img/8.1.png)
-
-## Nomor 9
-
-Setelah itu, Luffy juga membutuhkan agar url `www.franky.yyy.com/index.php/home` dapat menjadi menjadi `www.franky.yyy.com/home`.
-
-### Penjelasan nomor 9
-
-Menambahkan configurasi pada `/etc/apache2/sites-available/franky.a15.com.conf`
-
-```
-<VirtualHost *:80>
-
-        ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/franky.a15.com
-        ServerName franky.a15.com
-        ServerAlias www.franky.a15.com
-
-        Alias "/home" "/var/www/franky.a15.com/index.php/home"
-
-        ErrorLog ${APACHE_LOG_DIR}/error.log
-        CustomLog ${APACHE_LOG_DIR}/access.log combined
-
-</VirtualHost>
-```
-
-Restart apache.
-
-```
-service apache2 restart
-```
-
-Testing
-
-- Dari `loguetown` Buka `www.franky.B09.com/home` menggunakan lynx.
-
-  ![9.1](img/9.1.png)
-
-## Nomor 10
-
-Setelah itu, pada subdomain `www.super.franky.yyy.com`, Luffy membutuhkan penyimpanan aset yang memiliki DocumentRoot pada `/var/www/super.franky.yyy.com`.
-
-### Penjelasan nomor 10
-
-Menambahkan file configurasi pada folder `/etc/apache2/sites-available` dengan nama `super.franky.a15.com.conf`
-
-```
-<VirtualHost *:80>
+<VirtualHost \*:5000>
 
         ServerAdmin webmaster@localhost
         DocumentRoot /var/www/super.franky.a15.com
@@ -599,25 +698,11 @@ Menambahkan file configurasi pada folder `/etc/apache2/sites-available` dengan n
         CustomLog ${APACHE_LOG_DIR}/access.log combined
 
 </VirtualHost>
-
 ```
 
-Download file requirement menggunakan `wget`.
+Menambahkan listen port `5000` pada `/etc/apache2/ports.conf`
 
-```
-wget https://github.com/FeinardSlim/Praktikum-Modul-2-Jarkom/raw/main/super.franky.zip
-```
-
-Unzip file requirement dan disimpan dalam folder `/var/www/super.franky.a15.com`
-
-```
-unzip  super.franky.zip -d /var/www
-mv /var/www/super.franky /var/www/super.franky.a15.com
-```
-
-![10.1](img/10.1.png)
-
-Aktifkan `super.franky.a15.com` dengan command
+Aktifkan `super.franky.a15.com`
 
 ```
 cd /etc/apache2/sites-available/
@@ -625,152 +710,156 @@ a2ensite super.franky.a15.com.conf
 cd
 ```
 
-Restart apache
+Restart apache2
 
 ```
 service apache2 restart
 ```
 
+Menambahkan zone pada `enieslobby` untuk domain `super.franky.a15.com` pada file `/etc/bind/named.conf.local`
+
+```
+zone "super.franky.a15.com" {
+        type master;
+        file "/etc/bind/jarkom/super.franky.a15.com";
+};
+```
+
+Membuat folder jarkom di dalam `/etc/bind`
+
+```
+mkdir /etc/bind/jarkom
+```
+
+Menambahkan DNS record `super.franky.a15.com` pada folder `/etc/bind/jarkom` dengan nama `super.franky.a15.com`, konfigurasi sebagai berikut
+
+```
+;
+; BIND data file for local loopback interface
+;
+$TTL    604800
+@       IN      SOA     super.franky.a15.com. root.super.franky.a15.com. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      super.franky.a15.com.
+@       IN      A       192.176.3.69;
+www     IN      CNAME   super.franky.a15.com
+```
+
+Restart bind9
+
+```
+service bind9 restart
+```
+
+Pada water7 ditambahkan configurasi proxy pada `/etc/squid/squid.conf`
+
+```
+acl DRT dstdomain google.com
+deny_info http://super.franky.a15.com:5000/ DRT
+http_reply_access deny DRT
+```
+
+Restart squid
+
+```
+service squid restart
+```
+
 Testing
 
-- Pada `loguetown` buka `www.super.franky.a15.com` menggunakan lynx.
-
-  ![10.2](img/10.2.png)
-
-## Nomor 11
-
-Akan tetapi, pada folder `/public`, Luffy ingin hanya dapat melakukan directory listing saja.
-
-### Penjelasan nomor 11
-
-Menambahkan configurasi pada `/etc/apache2/sites-available/super.franky.a15.com.conf`
-
-```
-<VirtualHost *:80>
-
-        ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/super.franky.a15.com
-        ServerName super.franky.a15.com
-        ServerAlias www.super.franky.a15.com
-
-        <Directory /var/www/super.franky.a15.com/public>
-                Options +Indexes
-        </Directory>
-        <Directory /var/www/super.franky.a15.com/public/*>
-                Options -Indexes
-        </Directory>
-
-</VirtualHost>
-```
-
-Restart apache
-
-```
-service apache2 restart
-```
-
-Testing
-
-- Pada `loguetown` buka `www.super.franky.a15.com/public` menggunakan lynx
+- Pada `loguetown` buka `google.com` menggunakan lynx maka akan diarahkan ke `super.franky.a15.com`.
 
   ![11.1](img/11.1.png)
 
-- buka `www.super.franky.a15.com/public/css` menggunakan lynx
-
-  ![11.2](img/11.2.png)
-
 ## Nomor 12
 
-Tidak hanya itu, Luffy juga menyiapkan error file `404.html` pada folder `/error` untuk mengganti error kode pada apache.
+Saatnya berlayar! Luffy dan Zoro akhirnya memutuskan untuk berlayar untuk mencari harta karun di `super.franky.yyy.com`. Tugas pencarian dibagi menjadi dua misi, Luffy bertugas untuk mendapatkan gambar `(.png, .jpg)`, sedangkan Zoro mendapatkan sisanya. Karena Luffy orangnya sangat teliti untuk mencari harta karun, ketika ia berhasil mendapatkan gambar, ia mendapatkan gambar dan melihatnya dengan kecepatan `10 kbps`.
 
 ### Penjelasan nomor 12
 
-Menambahkan configurasi pada `/etc/apache2/sites-available/super.franky.a15.com.conf`
+Pada water7 ditambahkan configurasi proxy pada `/etc/squid/squid.conf`
 
 ```
-<VirtualHost *:80>
-
-        ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/super.franky.a15.com
-        ServerName super.franky.a15.com
-        ServerAlias www.super.franky.a15.com
-
-        <Directory /var/www/super.franky.a15.com/public>
-                Options +Indexes
-        </Directory>
-        <Directory /var/www/super.franky.a15.com/public/*>
-                Options -Indexes
-        </Directory>
-
-        ErrorDocument 404 /error/404.html
-
-        ErrorLog ${APACHE_LOG_DIR}/error.log
-        CustomLog ${APACHE_LOG_DIR}/access.log combined
-
-</VirtualHost>
+include /etc/squid/acl-bandwidth.conf
 ```
 
-Restart apache
+Membuat file baru `acl-bandwidth.conf` pada folder `/etc/squid/` dengan configurasi
 
 ```
-service apache2 restart
+acl download url_regex \.jpg$ \.png$
+auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/passwd
+acl zoro proxy_auth zorobelikapala15
+acl luffy proxy_auth luffybelikapala15
+
+delay_pools 2
+delay_class 1 1
+delay_parameters 1 1256/1256
+delay_access 1 deny zoro
+delay_access 1 allow download
+delay_access 1 deny all
+```
+
+Restart squid
+
+```
+service squid restart
 ```
 
 Testing
 
-- Pada `loguetown` buka `www.super.franky.a15.com/index.php` menggunakan lynx
+- Pada `loguetown` buka `google.com` menggunakan lynx, Masuk dengan user `luffy`
+  ![12.1](img/11.1.png)
 
-  ![12.1](img/12.1.png)
+- Masuk ke folder `public/image`
+  ![12.2](img/12.2.png)
+- Download file yang berekstensi `.png/.jpg`
+  ![12.3](img/12.3.png)
+  ![12.4](img/12.4.png)
+
+  _Terlihat ketika user luffy mendownload file .jpg kecepatan di limit 1,4 KiB/s_
 
 ## Nomor 13
 
-Luffy juga meminta Nami untuk dibuatkan konfigurasi virtual host. Virtual host ini bertujuan untuk dapat mengakses file asset `www.super.franky.yyy.com/public/js` menjadi `www.super.franky.yyy.com/js`.
+Sedangkan, Zoro yang sangat bersemangat untuk mencari harta karun, sehingga kecepatan kapal Zoro tidak dibatasi ketika sudah mendapatkan harta yang diinginkannya.
 
 ### Penjelasan nomor 13
 
-Menambahkan configurasi pada `/etc/apache2/sites-available/super.franky.a15.com.conf`
+Menambahkan configurasi pada `/etc/squid/acl-bandwidth.conf`
 
 ```
-<VirtualHost *:80>
-
-        ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/super.franky.a15.com
-        ServerName super.franky.a15.com
-        ServerAlias www.super.franky.a15.com
-
-        <Directory /var/www/super.franky.a15.com/public>
-                Options +Indexes
-        </Directory>
-        <Directory /var/www/super.franky.a15.com/public/*>
-                Options -Indexes
-        </Directory>
-
-        ErrorDocument 404 /error/404.html
-
-        <Directory /var/www/super.franky.a15.com/public/js>
-                Options +Indexes
-        </Directory>
-
-        Alias "/js" "/var/www/super.franky.a15.com/public/js"
-
-        ErrorLog ${APACHE_LOG_DIR}/error.log
-        CustomLog ${APACHE_LOG_DIR}/access.log combined
-
-</VirtualHost>
+delay_class 2 1
+delay_parameters 2 -1/-1
+delay_access 2 deny luffy
+delay_access 2 allow zoro
+delay_access 2 deny all
 ```
 
-Restart apache
+Restart squid
 
 ```
-service apache2 restart
+service squid restart
 ```
 
 Testing
 
-- Pada `loguetown` buka `www.super.franky.a15.com/js` menggunakan lynx
+- Pada `loguetown` buka `google.com` menggunakan lynx, Masuk dengan user `zoro`
+  ![13.1](img/11.1.png)
 
-  ![13.1](img/13.1.png)
+- Masuk ke folder `public/image`
+  ![13.2](img/12.2.png)
 
-|                                                        Kendala                                                        |
-| :-------------------------------------------------------------------------------------------------------------------: |
-| No 9 & 10 , saat demo tidak bisa dijalankan karena include confignya terdapat typo berupa "space" pada saat scripting |
+- Download sembarang file
+  ![13.3](img/12.3.png)
+  ![13.4](img/13.4.png)
+  _Terlihat ketika user zoro mendownload file kecepatan unlimited_
+
+<br>
+
+## Kendala
+
+1. Nomor 10 , saat demo tidak bisa dijalankan karena configurasi terdapat typo berupa "space" pada saat scripting
