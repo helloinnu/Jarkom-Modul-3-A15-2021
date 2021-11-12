@@ -1,7 +1,5 @@
 # Jarkom-Modul-3-A15-2021
 
-Laporan Resmi 3 Modul 2 Jaringan Komputer
-
 ### Anggota Kelompok :
 
 |      NRP       |     Nama     |
