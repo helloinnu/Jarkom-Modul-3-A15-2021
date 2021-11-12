@@ -1,5 +1,7 @@
 # Jarkom-Modul-3-A15-2021
 
+Laporan Resmi 3 Modul 3 Jaringan Komputer
+
 ### Anggota Kelompok :
 
 |      NRP       |     Nama     |
@@ -7,7 +9,7 @@
 | 05111940000034 | Aimar Wibowo |
 | 05111940000064 | Ifanu Antoni |
 
-### Nomor 1
+## Nomor 1
 
 `EniesLobby` akan dijadikan sebagai DNS Master, `Water7` akan dijadikan DNS Slave, dan `Skypie` akan digunakan sebagai Web Server. Terdapat 2 Client yaitu `Loguetown`, dan `Alabasta`. Semua node terhubung pada router `Foosha`, sehingga dapat mengakses internet.
 
@@ -97,7 +99,7 @@ Sekarang semua `node` sudah terhubung dan bisa mengakses internet.
 
 ![1.2](img/1.2.png)
 
-### Nomor 2
+## Nomor 2
 
 Luffy ingin menghubungi Franky yang berada di `EniesLobby` dengan denden mushi. Kalian diminta Luffy untuk membuat website utama dengan mengakses `franky.yyy.com` dengan alias `www.franky.yyy.com` pada folder `kaizoku`.
 
@@ -159,7 +161,7 @@ Testing
 
   ![2.1](img/2.1.png)
 
-### Nomor 3
+## Nomor 3
 
 Setelah itu buat subdomain `super.franky.yyy.com` dengan alias `www.super.franky.yyy.com` yang diatur DNS nya di `enieslobby` dan mengarah ke `skypie`.
 
@@ -309,7 +311,7 @@ Testing
 
   ![5.1](img/5.1.png)
 
-### Nomor 6
+## Nomor 6
 
 Setelah itu terdapat subdomain `mecha.franky.yyy.com` dengan alias `www.mecha.franky.yyy.com` yang didelegasikan dari `enieslobby` ke `water7` dengan IP menuju ke `skypie` dalam folder `sunnygo`.
 
@@ -424,7 +426,7 @@ Testing
 
   ![6.1](img/6.1.png)
 
-### Nomor 7
+## Nomor 7
 
 Untuk memperlancar komunikasi Luffy dan rekannya, dibuatkan subdomain melalui `water7` dengan nama `general.mecha.franky.yyy.com` dengan alias `www.general.mecha.franky.yyy.com` yang mengarah ke `skypie`.
 
@@ -465,11 +467,11 @@ Testing
 
   ![7.1](img/7.1.png)
 
-### Nomor 8
+## Nomor 8
 
 Setelah melakukan konfigurasi server, maka dilakukan konfigurasi Webserver. Pertama dengan webserver `www.franky.yyy.com`. Pertama, luffy membutuhkan webserver dengan DocumentRoot pada `/var/www/franky.yyy.com`.
 
-### JPenjelasan nomor 8
+### Penjelasan nomor 8
 
 Install aplikasi apache, PHP, dan libapache2-mod-php7.0. pada `skypie`
 
@@ -541,7 +543,7 @@ Testing
 
   ![8.1](img/8.1.png)
 
-### Nomor 9
+## Nomor 9
 
 Setelah itu, Luffy juga membutuhkan agar url `www.franky.yyy.com/index.php/home` dapat menjadi menjadi `www.franky.yyy.com/home`.
 
@@ -577,7 +579,7 @@ Testing
 
   ![9.1](img/9.1.png)
 
-### Nomor 10
+## Nomor 10
 
 Setelah itu, pada subdomain `www.super.franky.yyy.com`, Luffy membutuhkan penyimpanan aset yang memiliki DocumentRoot pada `/var/www/super.franky.yyy.com`.
 
@@ -635,7 +637,7 @@ Testing
 
   ![10.2](img/10.2.png)
 
-### Nomor 11
+## Nomor 11
 
 Akan tetapi, pada folder `/public`, Luffy ingin hanya dapat melakukan directory listing saja.
 
@@ -677,7 +679,7 @@ Testing
 
   ![11.2](img/11.2.png)
 
-### Nomor 12
+## Nomor 12
 
 Tidak hanya itu, Luffy juga menyiapkan error file `404.html` pada folder `/error` untuk mengganti error kode pada apache.
 
@@ -720,7 +722,7 @@ Testing
 
   ![12.1](img/12.1.png)
 
-### Nomor 13
+## Nomor 13
 
 Luffy juga meminta Nami untuk dibuatkan konfigurasi virtual host. Virtual host ini bertujuan untuk dapat mengakses file asset `www.super.franky.yyy.com/public/js` menjadi `www.super.franky.yyy.com/js`.
 
@@ -769,277 +771,6 @@ Testing
 
   ![13.1](img/13.1.png)
 
-### Nomor 14
-
-Dan Luffy meminta untuk web `www.general.mecha.franky.yyy.com` hanya bisa diakses dengan port 15000 dan port 15500.
-
-### Penjelasan nomor 14
-
-Menambahkan file configurasi pada folder `/etc/apache2/sites-available` dengan nama `general.mecha.franky.a15.com.conf`
-
-```
-<VirtualHost *:15000>
-
-        ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/general.mecha.franky.a15.com
-        ServerName general.mecha.franky.a15.com
-        ServerAlias www.general.mecha.franky.a15.com
-
-        ErrorLog ${APACHE_LOG_DIR}/error.log
-        CustomLog ${APACHE_LOG_DIR}/access.log combined
-
-</VirtualHost>
-
-<VirtualHost *:15500>
-
-        ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/general.mecha.franky.a15.com
-        ServerName general.mecha.franky.a15.com
-        ServerAlias www.general.mecha.franky.a15.com
-
-        ErrorLog ${APACHE_LOG_DIR}/error.log
-        CustomLog ${APACHE_LOG_DIR}/access.log combined
-
-</VirtualHost>
-
-```
-
-Download file requirement menggunakan `wget`.
-
-```
-wget https://github.com/FeinardSlim/Praktikum-Modul-2-Jarkom/raw/main/general.mecha.franky.zip
-```
-
-Unzip file requirement dan disimpan dalam folder `/var/www/general.mecha.franky.a15.com`
-
-```
-unzip general.mecha.franky.zip -d /var/www
-mv /var/www/general.mecha.franky /var/www/general.mecha.franky.a15.com
-```
-
-![14.1](img/14.1.png)
-
-Aktifkan `general.mecha.franky.a15.com` dengan command
-
-```
-cd /etc/apache2/sites-available/
-a2ensite general.mecha.franky.a15.com.conf
-cd
-```
-
-Menambahkan port listen pada file `/etc/apache2/ports.conf`
-
-```
-Listen 80
-Listen 15500
-Listen 15000
-
-<IfModule ssl_module>
-	Listen 443
-</IfModule>
-
-<IfModule mod_gnutls.c>
-	Listen 443
-</IfModule>
-
-# vim: syntax=apache ts=4 sw=4 sts=4 sr noet
-```
-
-Restart apache
-
-```
-service apache2 restart
-```
-
-Testing
-
-- Pada `loguetown` buka `www.general.mecha.franky.a15.com:15000` menggunakan lynx.
-
-  ![14.2](img/14.2.png)
-
-- buka `www.general.mecha.franky.a15.com:15500` menggunakan lynx.
-
-  ![14.3](img/14.3.png)
-
-### Nomor 15
-
-Dengan authentikasi username `luffy` dan password `onepiece` dan file di `/var/www/general.mecha.franky.yyy`.
-
-### Penjelasan nomor 15
-
-Menambahkan configurasi pada `/etc/apache2/sites-available/general.mecha.franky.a15.com.conf`
-
-```
-<VirtualHost *:15000>
-
-        ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/general.mecha.franky.a15.com
-        ServerName general.mecha.franky.a15.com
-        ServerAlias www.general.mecha.franky.a15.com
-
-      	<Directory /var/www/general.mecha.franky.a15.com>
-            AuthType Basic
-            AuthName "Private"
-            AuthUserFIle /etc/apache2/.htpasswd
-            Require valid-user
-        </Directory>
-
-        ErrorLog ${APACHE_LOG_DIR}/error.log
-        CustomLog ${APACHE_LOG_DIR}/access.log combined
-
-</VirtualHost>
-
-<VirtualHost *:15500>
-
-        ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/general.mecha.franky.a15.com
-        ServerName general.mecha.franky.a15.com
-        ServerAlias www.general.mecha.franky.a15.com
-
-        <Directory /var/www/general.mecha.franky.a15.com>
-                AuthType Basic
-                AuthName "Private"
-                AuthUserFIle /etc/apache2/.htpasswd
-                Require valid-user
-        </Directory>
-
-        ErrorLog ${APACHE_LOG_DIR}/error.log
-        CustomLog ${APACHE_LOG_DIR}/access.log combined
-
-</VirtualHost>
-```
-
-Restart apache.
-
-```
-service apache2 restart
-```
-
-Jalankan perintah berikut untuk membuat akun autentikasi baru dengan username `luffy` dan menambahkan password baru `onepiece`
-
-```
-htpasswd -c /etc/apache2/.htpasswd luffy
-```
-
-Testing
-
-- Dari `loguetown` buka `www.general.mecha.franky.a15.com` menggunakan lynx
-
-  ![15.1](img/15.1.png)
-  ![15.2](img/15.2.png)
-  ![15.2](img/15.3.png)
-
-### Nomor 16
-
-Dan setiap kali mengakses IP Skypie akan diahlikan secara otomatis ke `www.franky.yyy.com`.
-
-### Penjelasan nomor 16
-
-Lakukan configurasi pada file `/etc/apache2/sites-available/000-default.conf`
-
-```
-<VirtualHost *:80>
-
-        ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/html
-        Redirect / http://www.franky.a15.com/
-
-        ErrorLog ${APACHE_LOG_DIR}/error.log
-        CustomLog ${APACHE_LOG_DIR}/access.log combined
-
-</VirtualHost>
-```
-
-Restart apache.
-
-```
-service apache2 restart
-```
-
-Testing
-
-- Dari `loguetown` buka IP `skypie` `192.176.2.4` menggunakan lynx
-
-  ![16.1](img/16.1.png)
-
-### Nomor 17
-
-Dikarenakan Franky juga ingin mengajak temannya untuk dapat menghubunginya melalui website `www.super.franky.yyy.com`, dan dikarenakan pengunjung web server pasti akan bingung dengan randomnya images yang ada, maka Franky juga meminta untuk mengganti request gambar yang memiliki substring `franky` akan diarahkan menuju `franky.png`.
-
-### Penjelasan nomor 17
-
-Jalankan perintah `a2enmod rewrite` untuk mengaktifkan module rewrite.
-
-Menambahkan configurasi file baru `.htaccess` pada folder `/var/www/super.franky.a15.com/`
-
-```
-RewriteEngine On
-RewriteBase /var/www/super.franky.a15.com/public/images/
-RewriteCond %{REQUEST_FILENAME} !franky.png
-RewriteRule (.*)franky(.*) http://super.franky.a15.com/public/images/franky.png
-```
-
-Menambahkan configurasi pada `/etc/apache2/sites-available/super.franky.a15.com.conf`
-
-```
-<VirtualHost *:80>
-
-        ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/super.franky.a15.com
-        ServerName super.franky.a15.com
-        ServerAlias www.super.franky.a15.com
-
-        <Directory /var/www/super.franky.a15.com/public>
-            Options +Indexes
-        </Directory>
-
-        <Directory /var/www/super.franky.a15.com/public/*>
-            Options -Indexes
-        </Directory>
-
-        ErrorDocument 404 /error/404.html
-
-        <Directory /var/www/super.franky.a15.com/public/js>
-            Options +Indexes
-        </Directory>
-
-        Alias "/js" "/var/www/super.franky.a15.com/public/js"
-
-        ErrorLog ${APACHE_LOG_DIR}/error.log
-        CustomLog ${APACHE_LOG_DIR}/access.log combined
-
-##NOMOR 17
-
-        <Directory /var/www/super.franky.a15.com>
-            Options +FollowSymLinks -Multiviews
-            AllowOverride All
-        </Directory>
-
-</VirtualHost>
-```
-
-Restart apache
-
-```
-service apache restart
-```
-
-Testing
-
-- Pada loguetown buka `www.super.franky.B09.com/public/images/franky.png` menggunakan lynx
-
-  ![17.2](img/17.2.png)
-  ![17.1](img/17.1.png)
-
-- buka `www.super.franky.B09.com/public/images/eyeoffranky.jpg` menggunakan lynx
-
-  ![17.1](img/17.3.png)
-
-- buka `www.super.franky.B09.com/public/images/background-frank.jpg` menggunakan lynx
-
-  ![17.1](img/17.4.png)
-
-## Kendala
-
-1. Membuat command bash
-2. Pada soal 17 terjadi error
+|                                                        Kendala                                                        |
+| :-------------------------------------------------------------------------------------------------------------------: |
+| No 9 & 10 , saat demo tidak bisa dijalankan karena include confignya terdapat typo berupa "space" pada saat scripting |
