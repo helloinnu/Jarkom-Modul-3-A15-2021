@@ -848,14 +848,14 @@ service squid restart
 Testing
 
 - Pada `loguetown` buka `google.com` menggunakan lynx, Masuk dengan user `zoro`
-  ![13.1](img/11.1.png)
+![13.1](img/11.1.png)
 
 - Masuk ke folder `public/image`
-  ![13.2](img/12.2.png)
+![13.2](img/12.2.png)
 
 - Download sembarang file
-  ![13.3](img/12.3.png)
-  ![13.4](img/13.4.png)
+![13.3](img/12.3.png)
+![13.4](img/13.4.png)
   
   _Terlihat ketika user zoro mendownload file kecepatan unlimited_
 
