@@ -115,6 +115,8 @@ iface eth0 inet static
 
 Melakukan `iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE -s 192.176.0.0/16` pada router `Foosha`.
 
+Melakukan `echo nameserver 192.168.122.1 > /etc/resolv.conf` pada node ubuntu yang lain.
+
 Sekarang semua `node` sudah terhubung dan bisa mengakses internet.
 
 ![1.2](img/1.2.png)
@@ -124,149 +126,93 @@ Sekarang semua `node` sudah terhubung dan bisa mengakses internet.
 
 ### Penjelasan Nomor 2
 
-Install aplikasi bind9 pada `enieslobby`.
+Install aplikasi `isc-dhcp-server` pada `Foosha`.
 
 ```
-apt-get install bind9 -y
+apt-get install isc-dhcp-server -y
 ```
 
-Menambahkan zone untuk domain `franky.a15.com` pada file `/etc/bind/named.conf.local`
+Edit file `/etc/default/isc-dhcp-relay` seperti pada gambar berikut:
+
+![2.1](img/2.1.png)
+
+Restart isc-dhcp-relay.
 
 ```
-zone "franky.a15.com" {
-        type master;
-        file "/etc/bind/kaizoku/franky.a15.com";
-}
+service isc-dhcp-relay restart
 ```
-
-Membuat folder kaizoku di dalam `\etc\bind`
-
-```
-mkdir /etc/bind/kaizoku
-```
-
-Menambahkan DNS record `franky.a15.com` pada folder `/etc/bind/kaizoku` dengan nama `franky.a15.com`, konfigurasi sebagai berikut
-
-```
-;
-; BIND data file for local loopback interface
-;
-$TTL    604800
-@       IN      SOA     franky.a15.com. root.franky.a15.com. (
-                              2         ; Serial
-                         604800         ; Refresh
-                          86400         ; Retry
-                        2419200         ; Expire
-                         604800 )       ; Negative Cache TTL
-;
-@       IN      NS      franky.a15.com.
-@       IN      A       192.176.2.2;
-www     IN      CNAME   franky.a15.com. ;add cname www.franky.a15.com
-```
-
-Restart bind9
-
-```
-service bind9 restart
-```
-
-Testing
-
-- pada `logueton` edit nameserver pada file `/etc/resolv.conf` diarahkan ke IP `enieslobby`
-  ```
-  nameserver 192.176.2.2
-  ```
-- Ping ke `franky.a15.com` dan `www.franky.a15.com`
-
-  ![2.1](img/2.1.png)
 
 ## Nomor 3
 
-Client yang melalui `Switch1` mendapatkan range IP dari [prefix IP].1.20 - [prefix IP].1.99 dan [prefix IP].1.150 - [prefix IP].1.169.
+Client yang melalui `Switch1` mendapatkan range IP dari `[prefix IP].1.20` - `[prefix IP].1.99` dan `[prefix IP].1.150` - `[prefix IP].1.169`.
 
 ### Penjelasan Nomor 3
 
-Menambahkan config pada DNS record `franky.a15.com` dengan IP mengarah ke `skypie`
+Install aplikasi `isc-dhcp-server` pada `Jipangu`.
 
 ```
-; BIND data file for local loopback interface
-;
-$TTL    604800
-@       IN      SOA     franky.a15.com. root.franky.a15.com. (
-                              2         ; Serial
-                         604800         ; Refresh
-                          86400         ; Retry
-                        2419200         ; Expire
-                         604800 )       ; Negative Cache TTL
-;
-@       IN      NS      franky.a15.com.
-@       IN      A       192.176.2.2 ;
-www     IN      CNAME   franky.a15.com. ;add cname www.franky.a15.com
-
-super        IN      A       192.176.2.4 ;add subdomain super to skypie
-www.super	 IN     CNAME   super ;add cname www.super.franky.a15.com
+apt-get install isc-dhcp-server -y
 ```
 
-Restart bind9
+Edit file `/etc/default/isc-dhcp-server` seperti pada gambar berikut:
+
+![3.1](img/3.1.png)
+
+Edit file `/etc/dhcp/dhcpd.conf` seperti pada gambar berikut:
+
+![3.2](img/3.2.png)
+
+Restart `isc-dhcp-server`.
 
 ```
-service bind9 restart
+service isc-dhcp-server restart
 ```
 
-Testing
+Edit file `/etc/network/interfaces` pada `Loguetown` seperti pada gambar berikut:
 
-- Ping dari `loguetown` ke `super.franky.a15.com` dan `www.super.franky.a15.com`
+![3.3](img/3.3.png)
 
-  ![3.1](img/3.1.png)
+Restart `Loguetown` dengan klik stop dan start pada node `Loguetown`.
+
+Lakukan testing pada IP dan nameserver.
+
+![3.4](img/3.4.png)
+
+Edit file `/etc/network/interfaces` pada `Alabasta` seperti pada gambar berikut:
+
+![3.5](img/3.5.png)
+
+Restart `Alabasta` dengan klik stop dan start pada node `Alabasta`.
+
+Lakukan testing pada IP dan nameserver.
+
+![3.6](img/3.6.png)
 
 ## Nomor 4
 
-Client yang melalui `Switch3` mendapatkan range IP dari [prefix IP].3.30 - [prefix IP].3.50.
+Client yang melalui `Switch3` mendapatkan range IP dari `[prefix IP].3.30` - `[prefix IP].3.50`.
 
 ### Penjelasan nomor 4
 
-Menambahkan zone untuk reverse domain `franky.a15.com` pada file `/etc/bind/named.conf.local`
+Edit `file /etc/dhcp/dhcpd.conf` pada `Jipangu` seperti pada gambar berikut:
+
+![4.1](img/4.1.png)
+
+Restart `isc-dhcp-server`.
 
 ```
-zone "2.176.192.in-addr.arpa" {
-    type master;
-    file "/etc/bind/kaizoku/2.176.192.in-addr.arpa";
-};
+service isc-dhcp-server restart
 ```
 
-Menambahkan reverse DNS record `franky.a15.com` pada folder `/etc/bind/kaizoku` dengan nama `2.176.192.in-addr.arpa`, konfigurasi sebagai berikut
+Edit file `/etc/network/interfaces` pada `TottoLand` seperti pada gambar berikut:
 
-```
-; BIND data file for local loopback interface
-;
-$TTL    604800
-@       IN      SOA     franky.a15.com. root.franky.a15.com. (
-                              2         ; Serial
-                         604800         ; Refresh
-                          86400         ; Retry
-                        2419200         ; Expire
-                         604800 )       ; Negative Cache TTL
-;
-2.176.192.in-addr.arpa.   IN      NS     franky.a15.com.
-2                         IN      PTR     franky.a15.com. ; byte ke 4 enieslobby
-```
+![4.2](img/4.2.png)
 
-Restart bind9
+Restart `TottoLand` dengan klik stop dan start pada node `TottoLand`.
 
-```
-service bind9 restart
-```
+Lakukan testing pada IP dan nameserver.
 
-Testing
-
-- Install dnsutils pada `loguetown`
-  ```
-  apt-get update
-  apt-get install dnsutils -y
-  ```
-- Melakukan pengecekan dengan command `host -t PTR 192.176.2.2`
-
-  ![4.1](img/4.1.png)
+![4.3](img/4.3.png)
 
 ## Nomor 5
 
@@ -274,61 +220,37 @@ Client mendapatkan DNS dari `EniesLobby` dan client dapat terhubung dengan inter
 
 ### Penjelasan nomor 5
 
-Menambahkan config zone dns slave pada `/etc/bind/named.conf.local` di `enieslobby`
+Install aplikasi `bind9` pada `EniesLobby`.
 
 ```
-zone "franky.a15.com" {
-        type master;
-        notify yes;
-        also-notify {192.176.2.3;};
-        allow-transfer {192.176.2.3;};
-        file "/etc/bind/kaizoku/franky.a15.com";
-};
-```
-
-Restart bind9
-
-```
-service bind9 restart
-```
-
-Install bind9 pada `water7`
-
-```
-apt-get update
 apt-get install bind9 -y
 ```
 
-Menambahkan zone untuk domain `franky.a15.com` pada file `/etc/bind/named.conf.local` dengan type slave dan mengarah ke `enieslobby`
+Edit file /etc/bind/named.conf.options seperti pada gambar berikut:
 
-```
-zone "franky.a15.com" {
-    type slave;
-    masters {192.176.2.2; };
-    file "/var/lib/bind/franky.a15.com";
-};
-```
+![5.1](img/5.1.png)
 
-Restart bind9.
+Restart `bind9`.
 
 ```
 service bind9 restart
 ```
 
-Testing
+Lakukan `ping google.com` pada `Loguetown`.
 
-- Matikan bind9 pada `enieslobby`
-  ```
-  service bind9 stop
-  ```
-- Menambahkan config nameserver pada `loguetown` mengarah ke IP `water7`
-  ```
-  nameserver 192.176.2.2
-  nameserver 192.176.2.3
-  ```
-- Ping dari `loguetown` ke `franky.a15.com`
+![5.2](img/5.2.png)
 
-  ![5.1](img/5.1.png)
+Lakukan `ping google.com` pada `Alabasta`.
+
+![5.3](img/5.3.png)
+
+Lakukan `ping google.com` pada `Skypie`.
+
+![5.4](img/5.4.png)
+
+Lakukan `ping google.com` pada `TottoLand`.
+
+![5.5](img/5.5.png)
 
 ## Nomor 6
 
@@ -336,114 +258,15 @@ Lama waktu DHCP server meminjamkan alamat IP kepada Client yang melalui `Switch1
 
 ### Penjelasan nomor 6
 
-Menambahkan config pada DNS record `franky.a15.com`
+Pada `Jipangu`, edit file `/etc/dhcp/dhcpd.conf` di bagian `default-lease-time` dan `max-lease-time` seperti pada gambar berikut:
+
+![6.1](img/6.1.png)
+
+Restart `isc-dhcp-server`.
 
 ```
-;
-; BIND data file for local loopback interface
-;
-$TTL    604800
-@       IN      SOA     franky.a15.com. root.franky.a15.com. (
-                              2         ; Serial
-                         604800         ; Refresh
-                          86400         ; Retry
-                        2419200         ; Expire
-                         604800 )       ; Negative Cache TTL
-;
-@       IN      NS      franky.a15.com.
-@       IN      A       192.176.2.2 ;
-www     IN      CNAME   franky.a15.com. ;add cname www.franky.a15.com
-
-super       IN      A       192.176.2.4 ;add subdomain super to skypie
-www.super	IN     CNAME   super ;add cname www.super.franky.a15.com
-
-ns1     	IN      A       192.176.2.3 ;add subdomain ns1 to water7
-mecha     	IN      NS      ns1 ;delegation subdomain ns1 to mecha
+service isc-dhcp-server restart
 ```
-
-Edit configrasi file `/etc/bind/named.conf.options`
-
-```
-options {
-        directory "/var/cache/bind";
-
-        // If there is a firewall between you and nameservers you want
-        // to talk to, you may need to fix the firewall to allow multiple
-        // ports to talk.  See http://www.kb.cert.org/vuls/id/800113
-
-        // If your ISP provided one or more IP addresses for stable
-        // nameservers, you probably want to use them as forwarders.
-        // Uncomment the following block, and insert the addresses replacing
-        // the all-0s placeholder.
-        //forwarders {
-        //192.168.122.1;
-        //};
-        //========================================================================
-        // If BIND logs error messages about the root key being expired,
-        // you will need to update your keys.  See https://www.isc.org/bind-keys
-        //========================================================================
-        //dnssec-validation auto;
-        allow-query{any;};
-
-        auth-nxdomain no;    # conform to RFC1035
-        listen-on-v6 { any; };
-};
-```
-
-Restart bind9.
-
-```
-service bind9 restart
-```
-
-Pada `water7` edit config juga file `/etc/bind/named.conf.options` sama seperti pada `enieslobby`
-
-Menambahkan zone pada file `/etc/bind/named.conf.local`
-
-```
-zone "mecha.franky.a15.com"{
-  type master;
-  file "/etc/bind/sunnygo/mecha.franky.a15.com";
-};
-```
-
-Membuuat folder `sunnygo` di dalam `/etc/bind`.
-
-```
-mkdir /etc/bind/sunnygo
-```
-
-Menambahkan DNS record di `/etc/bind/sunnygo` untuk subdomain `mecha.franky.a15.com`
-
-```
-;
-; BIND data file for local loopback interface
-;
-$TTL	604800
-@	IN	SOA	mecha.franky.a15.com. root.mecha.franky.a15.com. (
-			      2		; Serial
-			 604800		; Refresh
-			  86400		; Retry
-			2419200		; Expire
-			 604800 )	; Negative Cache TTL
-;
-@		IN	NS	mecha.franky.a15.com.
-@		IN	A	192.176.2.4 ;IP skypie
-www		IN	CNAME	mecha.franky.a15.com;
-
-```
-
-Restart bind9
-
-```
-service bind9 restart
-```
-
-Testing
-
-- Ping dari `loguetown` ke `mecha.franky.a15.com` dan `www.mecha.franky.a15.com`
-
-  ![6.1](img/6.1.png)
 
 ## Nomor 7
 
