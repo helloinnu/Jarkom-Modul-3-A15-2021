@@ -254,7 +254,7 @@ Lakukan `ping google.com` pada `TottoLand`.
 
 ## Nomor 6
 
-Lama waktu DHCP server meminjamkan alamat IP kepada Client yang melalui `Switch1` selama 6 menit sedangkan pada client yang melalui `Switch3` selama 12 menit. Dengan waktu maksimal yang dialokasikan untuk peminjaman alamat IP selama 120 menit.
+Lama waktu DHCP server meminjamkan alamat IP kepada Client yang melalui `Switch1` selama `6 menit` sedangkan pada client yang melalui `Switch3` selama `12 menit`. Dengan waktu maksimal yang dialokasikan untuk peminjaman alamat IP selama `120 menit`.
 
 ### Penjelasan nomor 6
 
