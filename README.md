@@ -1,6 +1,6 @@
 # Jarkom-Modul-3-A15-2021
 
-Laporan Resmi 3 Modul 3 Jaringan Komputer
+Laporan Resmi Modul 3 Jaringan Komputer
 
 ### Anggota Kelompok :
 
@@ -11,7 +11,7 @@ Laporan Resmi 3 Modul 3 Jaringan Komputer
 
 ## Nomor 1
 
-`EniesLobby` akan dijadikan sebagai DNS Master, `Water7` akan dijadikan DNS Slave, dan `Skypie` akan digunakan sebagai Web Server. Terdapat 2 Client yaitu `Loguetown`, dan `Alabasta`. Semua node terhubung pada router `Foosha`, sehingga dapat mengakses internet.
+Luffy bersama Zoro berencana membuat peta tersebut dengan kriteria `EniesLobby` sebagai DNS Server, `Jipangu` sebagai DHCP Server, `Water7` sebagai Proxy Server.
 
 ### Penjelasan Nomor 1
 
@@ -21,7 +21,7 @@ Pertama membuat topolgi seperti berikut
 
 Kemudian melakukan config IP pada `Edit network configuration` pada setiap `node`.
 
-`Foosha` sebagai router
+`Foosha` sebagai Router / DHCP Relay
 
 ```
 auto eth0
@@ -36,42 +36,14 @@ auto eth2
 iface eth2 inet static
 	address 192.176.2.1
 	netmask 255.255.255.0
-```
 
-`EniesLobby` sebagai DNS master
-
-```
-auto eth0
-iface eth0 inet static
-	address 192.176.2.2
+auto eth3
+iface eth3 inet static
+	address 192.176.3.1
 	netmask 255.255.255.0
-	gateway 192.176.2.1
-    up echo nameserver 192.168.122.1 > /etc/resolv.conf
 ```
 
-`Water7` sebagai DNS slave
-
-```
-auto eth0
-iface eth0 inet static
-	address 192.176.2.3
-	netmask 255.255.255.0
-	gateway 192.176.2.1
-    up echo nameserver 192.168.122.1 > /etc/resolv.conf
-```
-
-`Skypie` sebagai Web Server
-
-```
-auto eth0
-iface eth0 inet static
-	address 192.176.2.4
-	netmask 255.255.255.0
-	gateway 192.176.2.1
-    up echo nameserver 192.168.122.1 > /etc/resolv.conf
-```
-
-`Loguetown` sebagai client
+`Loguetown` sebagai Client
 
 ```
 auto eth0
@@ -79,10 +51,9 @@ iface eth0 inet static
 	address 192.176.1.2
 	netmask 255.255.255.0
 	gateway 192.176.1.1
-    up echo nameserver 192.168.122.1 > /etc/resolv.conf
 ```
 
-`Alabasta` sebagai client
+`Alabasta` sebagai Client
 
 ```
 auto eth0
@@ -90,7 +61,56 @@ iface eth0 inet static
 	address 192.176.1.3
 	netmask 255.255.255.0
 	gateway 192.176.1.1
-    up echo nameserver 192.168.122.1 > /etc/resolv.conf
+```
+
+`EniesLobby` sebagai DNS Master
+
+```
+auto eth0
+iface eth0 inet static
+	address 192.176.2.2
+	netmask 255.255.255.0
+	gateway 192.176.2.1
+```
+
+`Water7` sebagai Proxy Server
+
+```
+auto eth0
+iface eth0 inet static
+	address 192.176.2.3
+	netmask 255.255.255.0
+	gateway 192.176.2.1
+```
+
+`Jipanggu` sebagai DHCP Server
+
+```
+auto eth0
+iface eth0 inet static
+	address 192.176.2.4
+	netmask 255.255.255.0
+	gateway 192.176.2.1
+```
+
+`Skypie` sebagai Client
+
+```
+auto eth0
+iface eth0 inet static
+	address 192.176.3.2
+	netmask 255.255.255.0
+	gateway 192.176.3.1
+```
+
+`TottoLand` sebagai Client
+
+```
+auto eth0
+iface eth0 inet static
+	address 192.176.3.3
+	netmask 255.255.255.0
+	gateway 192.176.3.1
 ```
 
 Melakukan `iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE -s 192.176.0.0/16` pada router `Foosha`.
@@ -100,8 +120,7 @@ Sekarang semua `node` sudah terhubung dan bisa mengakses internet.
 ![1.2](img/1.2.png)
 
 ## Nomor 2
-
-Luffy ingin menghubungi Franky yang berada di `EniesLobby` dengan denden mushi. Kalian diminta Luffy untuk membuat website utama dengan mengakses `franky.yyy.com` dengan alias `www.franky.yyy.com` pada folder `kaizoku`.
+`Foosha` sebagai DHCP Relay.
 
 ### Penjelasan Nomor 2
 
@@ -163,7 +182,7 @@ Testing
 
 ## Nomor 3
 
-Setelah itu buat subdomain `super.franky.yyy.com` dengan alias `www.super.franky.yyy.com` yang diatur DNS nya di `enieslobby` dan mengarah ke `skypie`.
+Client yang melalui `Switch1` mendapatkan range IP dari [prefix IP].1.20 - [prefix IP].1.99 dan [prefix IP].1.150 - [prefix IP].1.169.
 
 ### Penjelasan Nomor 3
 
@@ -202,7 +221,7 @@ Testing
 
 ## Nomor 4
 
-Buat juga reverse domain untuk domain utama.
+Client yang melalui `Switch3` mendapatkan range IP dari [prefix IP].3.30 - [prefix IP].3.50.
 
 ### Penjelasan nomor 4
 
@@ -251,7 +270,7 @@ Testing
 
 ## Nomor 5
 
-Supaya tetap bisa menghubungi Franky jika server `enieslobby` rusak, maka buat `water7` sebagai DNS Slave untuk domain utama.
+Client mendapatkan DNS dari `EniesLobby` dan client dapat terhubung dengan internet melalui DNS tersebut.
 
 ### Penjelasan nomor 5
 
@@ -313,7 +332,7 @@ Testing
 
 ## Nomor 6
 
-Setelah itu terdapat subdomain `mecha.franky.yyy.com` dengan alias `www.mecha.franky.yyy.com` yang didelegasikan dari `enieslobby` ke `water7` dengan IP menuju ke `skypie` dalam folder `sunnygo`.
+Lama waktu DHCP server meminjamkan alamat IP kepada Client yang melalui `Switch1` selama 6 menit sedangkan pada client yang melalui `Switch3` selama 12 menit. Dengan waktu maksimal yang dialokasikan untuk peminjaman alamat IP selama 120 menit.
 
 ### Penjelasan nomor 6
 
