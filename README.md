@@ -11,132 +11,114 @@ Laporan Resmi Modul 3 Jaringan Komputer
 
 ## Nomor 1
 
-Luffy bersama Zoro berencana membuat peta tersebut dengan kriteria `EniesLobby` sebagai DNS Server, `Jipangu` sebagai DHCP Server, `Water7` sebagai Proxy Server.
+Luffy yang sudah menjadi Raja Bajak Laut ingin mengembangkan daerah kekuasaannya dengan membuat peta seperti berikut:
+Luffy bersama Zoro berencana membuat peta tersebut dengan kriteria `EniesLobby` sebagai DNS Server, `Jipangu` sebagai DHCP Server, `Water7` sebagai Proxy Server
 
 ### Penjelasan Nomor 1
 
-Pertama membuat topolgi seperti berikut
+Membuat topologi seperti berikut
 
 ![1.1](img/1.1.png)
 
 Kemudian melakukan config IP pada `Edit network configuration` pada setiap `node`.
 
-`Foosha` sebagai Router / DHCP Relay
+`foosha` sebagai router
 
 ```
+#DHCP config for eth0
 auto eth0
-iface eth0 inet dhcp
+ iface eth0 inet dhcp
 
+# Static config for eth1
 auto eth1
 iface eth1 inet static
 	address 192.176.1.1
 	netmask 255.255.255.0
 
+# Static config for eth2
 auto eth2
 iface eth2 inet static
 	address 192.176.2.1
 	netmask 255.255.255.0
 
+# Static config for eth3
 auto eth3
 iface eth3 inet static
 	address 192.176.3.1
 	netmask 255.255.255.0
 ```
 
-`Loguetown` sebagai Client
+`eniesLobby` sebagai DNS server
 
 ```
-auto eth0
-iface eth0 inet static
-	address 192.176.1.2
-	netmask 255.255.255.0
-	gateway 192.176.1.1
-```
-
-`Alabasta` sebagai Client
-
-```
-auto eth0
-iface eth0 inet static
-	address 192.176.1.3
-	netmask 255.255.255.0
-	gateway 192.176.1.1
-```
-
-`EniesLobby` sebagai DNS Master
-
-```
+# Static config for eth0
 auto eth0
 iface eth0 inet static
 	address 192.176.2.2
 	netmask 255.255.255.0
 	gateway 192.176.2.1
+	up echo nameserver 192.168.122.1 > /etc/resolv.conf
 ```
 
-`Water7` sebagai Proxy Server
+`water7` sebagai proxy server
 
 ```
+# Static config for eth0
 auto eth0
 iface eth0 inet static
 	address 192.176.2.3
 	netmask 255.255.255.0
 	gateway 192.176.2.1
+	up echo nameserver 192.168.122.1 > /etc/resolv.conf
 ```
 
-`Jipanggu` sebagai DHCP Server
+`jipangu` sebagai dhcp server
 
 ```
+# Static config for eth0
 auto eth0
 iface eth0 inet static
 	address 192.176.2.4
 	netmask 255.255.255.0
 	gateway 192.176.2.1
+	up echo nameserver 192.168.122.1 > /etc/resolv.conf
 ```
 
-`Skypie` sebagai Client
+`loguetown`,`alabasta` ,`skypie`,`tottoland` sebagai client dengan configurasi ip DHCP
 
 ```
+# DHCP config for eth0
 auto eth0
-iface eth0 inet static
-	address 192.176.3.2
-	netmask 255.255.255.0
-	gateway 192.176.3.1
-```
-
-`TottoLand` sebagai Client
-
-```
-auto eth0
-iface eth0 inet static
-	address 192.176.3.3
-	netmask 255.255.255.0
-	gateway 192.176.3.1
+iface eth0 inet dhcp
 ```
 
 Melakukan `iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE -s 192.176.0.0/16` pada router `Foosha`.
 
-Melakukan `echo nameserver 192.168.122.1 > /etc/resolv.conf` pada node ubuntu yang lain.
-
-Sekarang semua `node` sudah terhubung dan bisa mengakses internet.
-
-![1.2](img/1.2.png)
-
 ## Nomor 2
-`Foosha` sebagai DHCP Relay.
+
+dan `Foosha` sebagai DHCP Relay (2)
 
 ### Penjelasan Nomor 2
 
-Install aplikasi `isc-dhcp-server` pada `Foosha`.
+Install aplikasi dhcp relay pada `foosha`.
 
 ```
-apt-get install isc-dhcp-server -y
+apt update
+apt install isc-dhcp-relay -y
 ```
 
-Edit file `/etc/default/isc-dhcp-relay` seperti pada gambar berikut:
+Menambahkan configurasi dhcp relay pada `/etc/default/isc-dhcp-relay` dengan IP server mengarah ke `jipangu`, interface yang digunakan adalah `eth1 eth2 eth3`
 
-![2.1](img/2.1.png)
+```
+SERVERS="192.176.2.4"
 
-Restart isc-dhcp-relay.
+INTERFACES="eth1 eth2 eth3"
+
+OPTIONS=""
+
+```
+
+Restart isc-dhcp-relay
 
 ```
 service isc-dhcp-relay restart
@@ -144,129 +126,101 @@ service isc-dhcp-relay restart
 
 ## Nomor 3
 
-Client yang melalui `Switch1` mendapatkan range IP dari `[prefix IP].1.20` - `[prefix IP].1.99` dan `[prefix IP].1.150` - `[prefix IP].1.169`.
-
-### Penjelasan Nomor 3
-
-Install aplikasi `isc-dhcp-server` pada `Jipangu`.
-
-```
-apt-get install isc-dhcp-server -y
-```
-
-Edit file `/etc/default/isc-dhcp-server` seperti pada gambar berikut:
-
-![3.1](img/3.1.png)
-
-Edit file `/etc/dhcp/dhcpd.conf` seperti pada gambar berikut:
-
-![3.2](img/3.2.png)
-
-Restart `isc-dhcp-server`.
-
-```
-service isc-dhcp-server restart
-```
-
-Edit file `/etc/network/interfaces` pada `Loguetown` seperti pada gambar berikut:
-
-![3.3](img/3.3.png)
-
-Restart `Loguetown` dengan klik stop dan start pada node `Loguetown`.
-
-Lakukan testing pada IP dan nameserver.
-
-![3.4](img/3.4.png)
-
-Edit file `/etc/network/interfaces` pada `Alabasta` seperti pada gambar berikut:
-
-![3.5](img/3.5.png)
-
-Restart `Alabasta` dengan klik stop dan start pada node `Alabasta`.
-
-Lakukan testing pada IP dan nameserver.
-
-![3.6](img/3.6.png)
+Semua client yang ada HARUS menggunakan konfigurasi IP dari DHCP Server.
+Client yang melalui `Switch1` mendapatkan range IP dari `[prefix IP].1.20 - [prefix IP].1.99` dan `[prefix IP].1.150 - [prefix IP].1.169`
 
 ## Nomor 4
 
-Client yang melalui `Switch3` mendapatkan range IP dari `[prefix IP].3.30` - `[prefix IP].3.50`.
-
-### Penjelasan nomor 4
-
-Edit `file /etc/dhcp/dhcpd.conf` pada `Jipangu` seperti pada gambar berikut:
-
-![4.1](img/4.1.png)
-
-Restart `isc-dhcp-server`.
-
-```
-service isc-dhcp-server restart
-```
-
-Edit file `/etc/network/interfaces` pada `TottoLand` seperti pada gambar berikut:
-
-![4.2](img/4.2.png)
-
-Restart `TottoLand` dengan klik stop dan start pada node `TottoLand`.
-
-Lakukan testing pada IP dan nameserver.
-
-![4.3](img/4.3.png)
+Client yang melalui `Switch3` mendapatkan range IP dari `[prefix IP].3.30 - [prefix IP].3.50`
 
 ## Nomor 5
 
-Client mendapatkan DNS dari `EniesLobby` dan client dapat terhubung dengan internet melalui DNS tersebut.
-
-### Penjelasan nomor 5
-
-Install aplikasi `bind9` pada `EniesLobby`.
-
-```
-apt-get install bind9 -y
-```
-
-Edit file /etc/bind/named.conf.options seperti pada gambar berikut:
-
-![5.1](img/5.1.png)
-
-Restart `bind9`.
-
-```
-service bind9 restart
-```
-
-Lakukan `ping google.com` pada `Loguetown`.
-
-![5.2](img/5.2.png)
-
-Lakukan `ping google.com` pada `Alabasta`.
-
-![5.3](img/5.3.png)
-
-Lakukan `ping google.com` pada `Skypie`.
-
-![5.4](img/5.4.png)
-
-Lakukan `ping google.com` pada `TottoLand`.
-
-![5.5](img/5.5.png)
+Client mendapatkan DNS dari `EniesLobby` dan client dapat terhubung dengan internet melalui DNS tersebut
 
 ## Nomor 6
 
-Lama waktu DHCP server meminjamkan alamat IP kepada Client yang melalui `Switch1` selama `6 menit` sedangkan pada client yang melalui `Switch3` selama `12 menit`. Dengan waktu maksimal yang dialokasikan untuk peminjaman alamat IP selama `120 menit`.
+Lama waktu DHCP server meminjamkan alamat IP kepada Client yang melalui `Switch1` selama 6 menit sedangkan pada client yang melalui `Switch3` selama 12 menit. Dengan waktu maksimal yang dialokasikan untuk peminjaman alamat IP selama 120 menit.
 
-### Penjelasan nomor 6
+### Penjelasan Nomor 3 sampai nomor 6
 
-Pada `Jipangu`, edit file `/etc/dhcp/dhcpd.conf` di bagian `default-lease-time` dan `max-lease-time` seperti pada gambar berikut:
+Pada `jipangu` install aplikasi dhcp server
 
-![6.1](img/6.1.png)
+```
+apt update
+apt install isc-dhcp-server -y
+```
 
-Restart `isc-dhcp-server`.
+Mengaktifkan interface dhcp yang digunakan yaitu `eth0`, pada file `/etc/default/isc-dhcp-server`
+
+```
+INTERFACES="eth0"
+```
+
+Melakukan configurasi dhcp pada `/etc/dhcp/dhcpd.conf` dengan config sebagai berikut
+
+```
+# Mengarah ke witch 2
+subnet 192.176.2.0 netmask 255.255.255.0 {
+}
+
+# Mengarah ke switch 1
+subnet 192.176.1.0 netmask 255.255.255.0 {
+    # config untuk nomor 3
+    range 192.176.1.20 192.176.1.99;
+    range 192.176.1.150 192.176.1.169;
+    option routers 192.176.1.1;
+    option broadcast-address 192.176.1.255;
+
+    # config untuk nomor 5
+    option domain-name-servers 192.176.2.2, 192.168.122.1;
+
+    #config untuk nomor 6
+    default-lease-time 360;
+    max-lease-time 7200;
+}
+
+# Mengarah ke swith 3
+subnet 192.176.3.0 netmask 255.255.255.0 {
+    #config nomor 4
+    range 192.176.3.30 192.176.3.50;
+    option routers 192.176.3.1;
+    option broadcast-address 192.176.3.255;
+
+    #config nomor 5
+    option domain-name-servers 192.176.2.2, 192.168.122.1;
+
+    #config nomor 6
+    default-lease-time 720;
+    max-lease-time 7200;
+}
+```
+
+Restart dhcp server
 
 ```
 service isc-dhcp-server restart
 ```
+
+Testing
+
+- Restart semua node client
+- Cek ip , ip DNS, dan lama peminjaman ip
+
+  - Pada `loguetown`
+
+    ![3.1](img/3.1.png)
+
+  - Pada `alabasta`
+
+    ![3.2](img/3.2.png)
+
+  - Pada `skypie`
+
+    ![3.3](img/3.3.png)
+
+  - Pada `tottoland`
+
+    ![3.4](img/3.4.png)
 
 ## Nomor 7
 
